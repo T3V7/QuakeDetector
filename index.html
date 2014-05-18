@@ -1,0 +1,352 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <title>Aftershocker</title>
+	<div align=center class="white" >
+	<font class="poskodbe">
+	<b>Earthquake and aftershock detector<b>
+	</font>
+	</br>
+	</br>
+	<style>
+	.alert2{
+		background-color: transparent;
+	}
+	.alert {
+	   background: #fff6bf url(exclamation.png) 15px center no-repeat;
+	   text-align: left;
+	   padding: 10px 20px 10px 50px;
+	   border-top: 2px solid #ffd324;
+	   border-bottom: 2px solid #ffd324;
+	}
+
+	input {
+	    height:120px;
+		width:280px;
+		font-size: 50px;
+		background-color: lime;
+		border-radius:40px/24px;
+	  }
+	  #obc{
+		background-color: transparent;
+		color: black;
+		border: 3;
+		border:1px #333 solid;   
+		padding:10px;
+		background-color:white;
+		-webkit-border-radius:40px;
+		-moz-border-radius:40px;
+		border-radius:40px;
+	  }
+	  #obc1{
+		border: none;
+		background-color: transparent;
+		color: black;
+		font-size: 45px;
+		height:100px;
+	  }
+	  #reset{
+		color: #000000;
+		font-size: 45px;
+		height:100px;
+		border:none;
+		outline:none;
+		display: inline-block;
+		-webkit-appearance:none;
+		-moz-appearance:none;
+		appearance:none;
+		cursor:pointer;
+		padding:5px;
+		margin: 0;
+		-webkit-box-shadow: 0 3px 0 #ccc, 0 -1px #fff inset;
+		-moz-box-shadow: 0 3px 0 #ccc, 0 -1px #fff inset;
+		box-shadow: 0 3px 0 #ccc, 0 -1px #fff inset;
+	  }
+	  .poskodbe{
+		padding:3px;
+		margin: 0;
+		-webkit-border-radius:4px;
+		-moz-border-radius:4px;
+		border-radius:4px;
+		-webkit-box-shadow: 0 3px 0 #ccc, 0 -1px #fff inset;
+		-moz-box-shadow: 0 3px 0 #ccc, 0 -1px #fff inset;
+		box-shadow: 0 3px 0 #ccc, 0 -1px #fff inset;
+		background: #f8f8f8;
+		color:#888;
+		border:none;
+		outline:none;
+		display: inline-block;
+		-webkit-appearance:none;
+		-moz-appearance:none;
+		appearance:none;
+		cursor:pointer;
+		font-size: 33px;
+	  }
+	  #legal{
+		margin: 0;
+		text-align: center;
+		font-size: 11px;
+		margin-bottom: 20px;
+		line-height: 2em;
+		padding: 0;
+		display: block;
+		-webkit-margin-before: 1em;
+		-webkit-margin-after: 1em;
+		-webkit-margin-start: 0px;
+		-webkit-margin-end: 0px;
+		color: #757E82;
+		font-family: Tahoma, Geneva, sans-serif;
+	  }
+	  .white {
+		background-color: #ffffff;
+		border-radius:20px/12px;
+	  }
+	</style>
+
+	
+    <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+    <script type="text/javascript" charset="utf-8">
+	//
+    // cordova.js so knjižnice, ki pošljejo podatke o pospešku(acceleration.x/y/z)
+	// ozadje nastavimo na rdeče.
+	//
+	document.bgColor= '#FF0000';
+	// spremenljivke nastavimo na 0.
+	//
+    var
+		watchID = null,
+		atm = [0, 0, 0, 0, 0, 0, 0, 0, 0],
+		atf = [0, 0, 0, 0, 0, 0, 0, 0, 0],
+		apm = [0, 0, 0, 0, 0],
+		apf = [0, 0, 0, 0, 0],
+		x_0 = 0,
+		y_0 = 0,
+		z_0 = 0,
+		a_x = 0,
+		a_y = 0,
+		a_z = 0,
+		a = 0,
+		potres = 1,
+		potresJa = 0,
+		meja = 0.1,
+		meritev = 0;
+    /* 	eventlistener počaka, da je naprava pripravljena in zažene funkcijo
+		onDeviceReady.*/
+    document.addEventListener("deviceready", onDeviceReady, false);
+
+    // API-ji naprave so na voljo
+    //
+	function myAlert(text,mode){
+		if (mode == 1){
+			document.getElementById("alert").className = "alert2";
+			document.getElementById("alert").innerHTML = "";
+		}
+		else{
+			document.getElementById("alert").className = "alert";
+			document.getElementById("alert").innerHTML = text;
+		}
+	}
+	
+	
+    function onDeviceReady() {
+		//ozadje je ponovno nastavljeno na rdečo.
+		//zaženemo funkcijo startWatch.
+		//uporabnika seznanimo z pravili uporabe.
+		//
+		document.bgColor= '#FF0000';
+		document.getElementById("reset").style.background='#FF0000';
+		//alert('Napravo položite na ravno ploskev, ki jo lahko trese le gibanje tal. Najboljša bi bila kakšna velika skala, ampak ni važno. Potem pa v spodnje polje vpišite, koliko menite, da je na zgradbi škode.');
+		startWatch();
+	}
+
+    // Merjenje se začne.
+    //
+    function startWatch() {
+
+        // Pospešek je ponovno izmerjen na 10 milisekund(100x na sekundo.)
+        //
+		var options = { frequency: 10 };
+		// Vsakič zažene tudi funkcijo onSuccess, če iz pospeška dobi podatke. Če pride do napake, se sproži onError.
+        //
+		watchID = navigator.accelerometer.watchAcceleration(onSuccess, onError, options);
+    }
+
+    // 	Ko gremo iz aplikacije se dogajanje konča za funkcijo stopWatch.
+    //
+    function stopWatch() {
+        if (watchID) {
+            navigator.accelerometer.clearWatch(watchID);
+            watchID = null;
+        }
+    }
+	
+    // V tej funkciji se izvede vsa frekfenčna analiza.
+    //
+    function onSuccess(acceleration) {
+		
+		var element = document.getElementById('accelerometer');
+		
+		if(meritev < 100)
+			document.bgColor= '#FFA500';
+			document.getElementById("reset").style.background='#FFA500';			
+		if( meritev >= 100 && meritev < 300){
+			x_0 = x_0 + acceleration.x;
+			y_0 = y_0 + acceleration.y;
+			z_0 = z_0 + acceleration.z;
+			document.bgColor= '#FFFF00';
+			document.getElementById("reset").style.background='#FFFF00';
+		}
+		if( meritev === 300){
+			x_0 = x_0/200;
+			y_0 = y_0/200;
+			z_0 = z_0/200;
+		}
+		if(meritev > 300){
+			a_x = Math.abs(acceleration.x - x_0);
+			a_y = Math.abs(acceleration.y - y_0);
+			a_z = Math.abs(acceleration.z - z_0);
+			a = Math.sqrt(a_x * a_x + a_y * a_y + a_z * a_z);
+			//frekfenčna analiza z metodo Butterworth in možnostjo Bandpass za x, y in z.
+			//Prepušča le frekvence valovanj med 5 in 10Hz. Zazna primarni val.
+			//
+			atm[0] = atm[1]; atm[1] = atm[2]; atm[2] = atm[3]; atm[3] = atm[4];
+			atm[4] = atm[5]; atm[5] = atm[6]; atm[6] = atm[7]; atm[7] = atm[8]; 
+			atm[8] = a / 2400.388257;
+			atf[0] = atf[1]; atf[1] = atf[2]; atf[2] = atf[3]; atf[3] = atf[4];
+			atf[4] = atf[5]; atf[5] = atf[6]; atf[6] = atf[7]; atf[7] = atf[8]; 
+			atf[8] =   (atm[0] + atm[8]) - 4 * (atm[2] + atm[6]) + 6 * atm[4]
+					+ ( -0.4382651423 * atf[0]) + (  3.4868616590 * atf[1])
+					+ (-12.5510740750 * atf[2]) + ( 26.6259975050 * atf[3])
+					+ (-36.3673023420 * atf[4]) + ( 32.7361054860 * atf[5])
+					+ (-18.9710432050 * atf[6]) + (  6.4777476173 * atf[7]);
+					
+					
+			//frevenčna analiza Butterworth 0-5Hz(površinski valovi)
+			//
+			apm[0] = apm[1]; apm[1] = apm[2]; apm[2] = apm[3]; apm[3] = apm[4];
+			apm[4] = a / 2400.388646;
+			apf[0] = apf[1]; apf[1] = apf[2]; apf[2] = apf[3]; apf[3] = apf[4];
+			apf[4] =   (apm[0] + apm[4]) + 4 * (apm[1] + apm[3]) + 6 * apm[2]
+                     + ( -0.4382651423 * apf[0]) + (  2.1121553551 * apf[1])
+                     + ( -3.8611943490 * apf[2]) + (  3.1806385489 * apf[3]);
+
+			//	Tukaj s pomočjo innerHTML-ja izpišemo vrednosti(nefiltrirana       filtrairana vrednost)
+			//
+			/*element.innerHTML = 'ax:  ' + Math.floor((acceleration.x/9.81)*100 + 0.5)/100 + '         ' + '<br />' +
+								'ay:  ' + Math.floor((acceleration.y/9.81)*100 + 0.5)/100 + '         ' + '<br />' +
+								'az:  ' + Math.floor((acceleration.z/9.81)*100 + 0.5)/100 + '         ' + '<br />' + 
+								'a :  ' + Math.floor((a/9.81)*100 + 0.5)/100 + '         ' + '<br />' +
+								'atf: ' + Math.floor((atf[8]/9.81)*100 + 0.5)/100 + '         ' + '<br />';*/
+								element.innerHTML =' '
+			//	Če je vrednost prevelika in smo v opciji zaznavanja naprava zapiska z opozarilnim zvokom.
+			//
+			if ((atf[8] >= meja && potres === 0)||(apf[4] >= 5*meja && potres === 0)){
+				document.bgColor= '#FF0000';
+				document.getElementById("reset").style.background='#FF0000';
+				potres = 1;
+				navigator.notification.beep(3);
+			}
+			else
+			{
+				document.bgColor= '#00FF00';
+				document.getElementById("reset").style.background='#00FF00';
+				document.getElementById('reset').value = '';
+				document.getElementById('reset').disabled = true;
+			}
+		}
+		//V primeru, da smo zaznali potres, je ozadje rdeče, drugače pa je 3 sekunde rumeno, potem pa zeleno.
+		//
+		if (potres === 1){
+			document.bgColor= '#FF0000';
+			document.getElementById("reset").style.background='#FF0000';
+			document.getElementById('reset').value = 'Start';
+			document.getElementById('reset').disabled = false;
+		}
+	
+		// Število meritve, ki je pomembno zato, da je zaslon na začetku rumen.
+		//
+		meritev++;
+		
+    }
+
+    // onError: Napaka pri dobivanju pospeška.
+    //
+    function onError() {
+        alert('Napaka!');
+    }
+	
+	function back(){
+	//Ko pritisnemo na gumb za resetiranje...
+		if(potresJa == 1){
+			if (meja >= 0.01 && meja <= 9.81){
+			//To se izvede le, če je meja pravilno visoka
+			document.bgColor= '#00FF00';
+			document.getElementById("reset").style.background='#00FF00';
+			potres = 0;
+			meritev = 0;
+			x_0 = 0;
+			y_0 = 0;
+			z_0 = 0;
+			}
+			else{
+			//če pa je meja prenizka ali previsoka...
+				if(meja < 0.5){
+				myAlert('Please select the damage level.', 0)
+				}
+				else{
+				myAlert('Please select the damage level.', 0)
+				}
+			}
+		}
+		else{
+		//Če pa občutljivost še ni napisana...
+		myAlert('Please select the damage level.', 0)
+		}
+	}
+	//to se izvede, ko vpišemo vrednost.
+	function izbrano(){
+		vnos = document.getElementById('poskodbe').value;
+		if (vnos){
+			console.log(vnos);
+			meja = vnos*9.81;
+			potresJa = 1;
+			back();
+			myAlert('a', 1)
+		}
+		else {
+			myAlert('Please select the damage level.', 0);
+		}
+	}
+    </script>
+  </head>
+  <body>
+    <div id="accelerometer">Waiting for accelerometer...</div>
+	</br>
+	<div align="center">
+		<input type=button value =''  name =reset id =reset onClick =izbrano()></br></br>
+	</div>
+		</br>
+		<p class="poskodbe">Damage:</p></br></br>
+		<div>
+			<label></label>
+			<select id="poskodbe" name="poskodbe" class="poskodbe" required >
+				<option value="">---Select---</option>
+				<option value="0.068">Just a bit</option>
+				<option value="0.056">Little</option>
+				<option value="0.044">Middle</option>
+				<option value="0.032">A lot</option>
+				<option value="0.02">Very much</option>
+			</select>
+		</div>
+		</br>
+		<p class="alert" id="alert" name="alert" >Place the device on straight surface that can be moved only by ground shaking. The best should be a big rock, but it isnt as important as entering the building damage.</p>
+		</br>
+		<p id="legal" name="legal">
+		Copyright Team the [un:]PREDictables ©2014
+		</p>
+	</div>
+	<script type="text/javascript">
+	document.getElementById("reset").style.background='#FF0000';
+	</script>
+	</body>
+</html>
