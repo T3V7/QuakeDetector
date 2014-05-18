@@ -6,14 +6,14 @@
         id        = "com.phonegap.senzor_potresa"
         version   = "1.9.4">
 
-    <name>Senzor Potresa</name>
+    <name>Aftershocker</name>
 
     <description>
-        Aplikacija, ki s pomočjo pospeškomera zaznava potrese.
+        App that detects aftershocks.
     </description>
 
     <author href="http://phonegap.com" email="support@phonegap.com">
-        [ne:]PREDvidljivi
+        the [un:]PREDictables
     </author>
 
     <!--
