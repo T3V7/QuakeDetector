@@ -107,11 +107,11 @@
     <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
     <script type="text/javascript" charset="utf-8">
 	//
-    // cordova.js so knjižnice, ki pošljejo podatke o pospešku(acceleration.x/y/z)
+    // cordova.js are librares that give out the data about acceleration(acceleration.x/y/z)
 	// ozadje nastavimo na rdeče.
 	//
 	document.bgColor= '#FF0000';
-	// spremenljivke nastavimo na 0.
+	// Resetting the variables
 	//
     var
 		watchID = null,
@@ -130,12 +130,16 @@
 		potresJa = 0,
 		meja = 0.1,
 		meritev = 0;
-    /* 	eventlistener počaka, da je naprava pripravljena in zažene funkcijo
+    /* 	eventlistener waits for the device to get ready and launches the function
 		onDeviceReady.*/
     document.addEventListener("deviceready", onDeviceReady, false);
 
-    // API-ji naprave so na voljo
-    //
+
+	
+	// This function makes a special alert that is shown at the bottom of the app. If the mode is 1, it will clear everything, else it will show the text you entered.
+	// Usage: myAlert("The text you want to be there.", 0);
+	//    or: myAlert("", 1);
+	//
 	function myAlert(text,mode){
 		if (mode == 1){
 			document.getElementById("alert").className = "alert2";
@@ -147,31 +151,30 @@
 		}
 	}
 	
-	
+	// APIs are availables
+    //
     function onDeviceReady() {
-		//ozadje je ponovno nastavljeno na rdečo.
-		//zaženemo funkcijo startWatch.
-		//uporabnika seznanimo z pravili uporabe.
+		//Background is set to red
+		//Launching function startWatch
 		//
 		document.bgColor= '#FF0000';
 		document.getElementById("reset").style.background='#FF0000';
-		//alert('Napravo položite na ravno ploskev, ki jo lahko trese le gibanje tal. Najboljša bi bila kakšna velika skala, ampak ni važno. Potem pa v spodnje polje vpišite, koliko menite, da je na zgradbi škode.');
 		startWatch();
 	}
 
-    // Merjenje se začne.
+    // The measuring starts.
     //
     function startWatch() {
 
-        // Pospešek je ponovno izmerjen na 10 milisekund(100x na sekundo.)
+        // We measure the acceleration every 10 milisecond - that's 100 times a second. The filter is addapted for this interval.
         //
 		var options = { frequency: 10 };
-		// Vsakič zažene tudi funkcijo onSuccess, če iz pospeška dobi podatke. Če pride do napake, se sproži onError.
+		// Launching the onSuccess to get the data of the accelerometer. It launches onError if there is any mistake.
         //
 		watchID = navigator.accelerometer.watchAcceleration(onSuccess, onError, options);
     }
 
-    // 	Ko gremo iz aplikacije se dogajanje konča za funkcijo stopWatch.
+    // 	We dont use stopWatch but it cansel the whole procedure.
     //
     function stopWatch() {
         if (watchID) {
@@ -180,7 +183,7 @@
         }
     }
 	
-    // V tej funkciji se izvede vsa frekfenčna analiza.
+    // This is where all the frequency filters are.
     //
     function onSuccess(acceleration) {
 		
@@ -207,7 +210,8 @@
 			a_z = Math.abs(acceleration.z - z_0);
 			a = Math.sqrt(a_x * a_x + a_y * a_y + a_z * a_z);
 			//frekfenčna analiza z metodo Butterworth in možnostjo Bandpass za x, y in z.
-			//Prepušča le frekvence valovanj med 5 in 10Hz. Zazna primarni val.
+			//Filter Butterworth with Bandpass between 5 and 10 Hz (Body waves) and 0 - 10 Hz (Surface waves)
+			//Body waves
 			//
 			atm[0] = atm[1]; atm[1] = atm[2]; atm[2] = atm[3]; atm[3] = atm[4];
 			atm[4] = atm[5]; atm[5] = atm[6]; atm[6] = atm[7]; atm[7] = atm[8]; 
@@ -221,7 +225,7 @@
 					+ (-18.9710432050 * atf[6]) + (  6.4777476173 * atf[7]);
 					
 					
-			//frevenčna analiza Butterworth 0-5Hz(površinski valovi)
+			//Surface waves
 			//
 			apm[0] = apm[1]; apm[1] = apm[2]; apm[2] = apm[3]; apm[3] = apm[4];
 			apm[4] = a / 2400.388646;
@@ -230,15 +234,9 @@
                      + ( -0.4382651423 * apf[0]) + (  2.1121553551 * apf[1])
                      + ( -3.8611943490 * apf[2]) + (  3.1806385489 * apf[3]);
 
-			//	Tukaj s pomočjo innerHTML-ja izpišemo vrednosti(nefiltrirana       filtrairana vrednost)
-			//
-			/*element.innerHTML = 'ax:  ' + Math.floor((acceleration.x/9.81)*100 + 0.5)/100 + '         ' + '<br />' +
-								'ay:  ' + Math.floor((acceleration.y/9.81)*100 + 0.5)/100 + '         ' + '<br />' +
-								'az:  ' + Math.floor((acceleration.z/9.81)*100 + 0.5)/100 + '         ' + '<br />' + 
-								'a :  ' + Math.floor((a/9.81)*100 + 0.5)/100 + '         ' + '<br />' +
-								'atf: ' + Math.floor((atf[8]/9.81)*100 + 0.5)/100 + '         ' + '<br />';*/
+			//Clearing the "Watching for acceleration"
 								element.innerHTML =' '
-			//	Če je vrednost prevelika in smo v opciji zaznavanja naprava zapiska z opozarilnim zvokom.
+			//	Alarm if the value is too high.
 			//
 			if ((atf[8] >= meja && potres === 0)||(apf[4] >= 5*meja && potres === 0)){
 				document.bgColor= '#FF0000';
@@ -254,7 +252,7 @@
 				document.getElementById('reset').disabled = true;
 			}
 		}
-		//V primeru, da smo zaznali potres, je ozadje rdeče, drugače pa je 3 sekunde rumeno, potem pa zeleno.
+		// If we detect an earthquake, the background is red.
 		//
 		if (potres === 1){
 			document.bgColor= '#FF0000';
@@ -263,23 +261,23 @@
 			document.getElementById('reset').disabled = false;
 		}
 	
-		// Število meritve, ki je pomembno zato, da je zaslon na začetku rumen.
+		// Increasing the ammount of measures.
 		//
 		meritev++;
 		
     }
 
-    // onError: Napaka pri dobivanju pospeška.
+    // onError: An error while getting the acceleration.
     //
     function onError() {
-        alert('Napaka!');
+        alert('Error!');
     }
 	
 	function back(){
-	//Ko pritisnemo na gumb za resetiranje...
+	//When you reset it...
 		if(potresJa == 1){
 			if (meja >= 0.01 && meja <= 9.81){
-			//To se izvede le, če je meja pravilno visoka
+			//This happens only if the treshold is right.
 			document.bgColor= '#00FF00';
 			document.getElementById("reset").style.background='#00FF00';
 			potres = 0;
@@ -289,7 +287,7 @@
 			z_0 = 0;
 			}
 			else{
-			//če pa je meja prenizka ali previsoka...
+			//and if not so...
 				if(meja < 0.5){
 				myAlert('Please select the damage level.', 0)
 				}
@@ -299,11 +297,11 @@
 			}
 		}
 		else{
-		//Če pa občutljivost še ni napisana...
+		//And if it isn't entered...
 		myAlert('Please select the damage level.', 0)
 		}
 	}
-	//to se izvede, ko vpišemo vrednost.
+	//When we enter the value.
 	function izbrano(){
 		vnos = document.getElementById('poskodbe').value;
 		if (vnos){
